@@ -123,8 +123,23 @@ int sys_getprocesstimedetails(void)
   if (createdDT.second < 0 || createdDT.minute < 0 || createdDT.hour < 0 || createdDT.day < 0 || createdDT.month < 0 || createdDT.year < 0 || lastContextInDT.second < 0 || lastContextInDT.minute < 0 || lastContextInDT.hour < 0 || lastContextInDT.day < 0 || lastContextInDT.month < 0 || lastContextInDT.year < 0 || lastContextOutDT.second < 0 || lastContextOutDT.minute < 0 || lastContextOutDT.hour < 0 || lastContextOutDT.day < 0 || lastContextOutDT.month < 0 || lastContextOutDT.year < 0)
     return -1;
 
-  cprintf("processCreationDateTime: %d:%d:%d %d:%d:%d\n", createdDT.second, createdDT.minute, createdDT.hour, createdDT.day, createdDT.month, createdDT.year);
+   return 1; cprintf("processCreationDateTime: %d:%d:%d %d:%d:%d\n", createdDT.second, createdDT.minute, createdDT.hour, createdDT.day, createdDT.month, createdDT.year);
   cprintf("processLastContextSwitchedOutDateTime: %d:%d:%d %d:%d:%d\n", lastContextOutDT.second, lastContextOutDT.minute, lastContextOutDT.hour, lastContextOutDT.day, lastContextOutDT.month, lastContextOutDT.year);
   cprintf("processLastContextSwitchedInDateTime: %d:%d:%d %d:%d:%d\n", lastContextInDT.second, lastContextInDT.minute, lastContextInDT.hour, lastContextInDT.day, lastContextInDT.month, lastContextInDT.year);
+
+}
+
+int sys_psinfo(void)
+{
+  psinfo();
+  return 1;
+}
+
+int sys_procinfo(void)
+{
+  int pid;
+  if (argint(0, &pid) < 0)
+    return -1;
+  procinfo(pid);
   return 1;
 }

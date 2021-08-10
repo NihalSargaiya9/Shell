@@ -33,3 +33,6 @@ SYSCALL(helloWorld)
 SYSCALL(numOpenFiles)
 SYSCALL(memAlloc)
 SYSCALL(getprocesstimedetails)
+SYSCALL(psinfo)
+SYSCALL(procinfo)
+

@@ -27,6 +27,8 @@ int helloWorld(void);
 int numOpenFiles(void);
 int memAlloc(void);
 int getprocesstimedetails(void);
+int psinfo(void);
+int procinfo(int);
 
 // ulib.c
 int stat(const char*, struct stat*);
