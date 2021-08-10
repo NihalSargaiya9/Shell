@@ -88,7 +88,7 @@ allocproc(void)
 found:
   p->state = EMBRYO;
   p->pid = nextpid++;
-
+  cmostime(&(p->creationDT));
   release(&ptable.lock);
 
   // Allocate kernel stack.
@@ -342,6 +342,7 @@ scheduler(void)
       c->proc = p;
       switchuvm(p);
       p->state = RUNNING;
+      cmostime(&(p->lastContextInDT));
 
       swtch(&(c->scheduler), p->context);
       switchkvm();
@@ -367,7 +368,7 @@ sched(void)
 {
   int intena;
   struct proc *p = myproc();
-
+  cmostime(&(p->lastContextOutDT));
   if(!holding(&ptable.lock))
     panic("sched ptable.lock");
   if(mycpu()->ncli != 1)
