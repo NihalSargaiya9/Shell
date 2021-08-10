@@ -52,9 +52,10 @@ struct proc {
   struct inode *cwd;                  // Current directory
   char name[16];                      // Process name (debugging)
   int hsize;                          // Heap size used till now
-  struct rtcdate creationDT;         // Process Creation Date Time
-  struct rtcdate lastContextOutDT;   // Process last context switch out Date Time
-  struct rtcdate lastContextInDT;    // Process last context switch out Date Time
+  struct rtcdate creationDT;          // Process Creation Date Time
+  struct rtcdate lastContextOutDT;    // Process last context switch out Date Time
+  struct rtcdate lastContextInDT;     // Process last context switch out Date Time
+  int exitStatus;                     // Exit status code of the process
 };
 
 // Process memory is laid out contiguously, low addresses first:
