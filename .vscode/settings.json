@@ -1,6 +1,7 @@
 {
     "files.associations": {
         "user.h": "c",
-        "memlayout.h": "c"
+        "memlayout.h": "c",
+        "defs.h": "c"
     }
 }

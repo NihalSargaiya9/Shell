@@ -4,12 +4,19 @@
 #include "fcntl.h"
 int main(void)
 {
-
+    int staus;
+    int tt =fork();
+    if(tt==0)
+    {
+        printf(1," i am child\n");
+        exit(2);
+    }
+    wait(&staus);
     printf(1, "Total Number of Open Files: %d\n", numOpenFiles());
     int fd;
     fd = open("backup", O_CREATE | O_RDWR);
     printf(1, "Total Number of Open Files: %d\n", numOpenFiles());
     close(fd);
     printf(1, "Total Number of Open Files: %d\n", numOpenFiles());
-    exit(0);
+    exit(1);
 }

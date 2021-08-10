@@ -13,16 +13,26 @@ sys_fork(void)
 }
 
 int
-sys_exit(int status)
+sys_exit()
 {
-  myproc()->exitStatus=status;
+  int status;
+
+   if( argint(0, &status) < 0 ){
+   return -1;
+ }
+  cprintf("value of: %x\n",argint(0, &status));
+  myproc()->exitStatus=argint(0, &status); // seting value of status variable
   exit();
   return 0;  // not reached
 }
 
 int
-sys_wait(void)
+sys_wait(int *status)
 {
+  // int *p;
+ if(*status!=0)
+    cprintf("here :%d\n",myproc()->exitStatus);
+    // *status  = myproc()->exitStatus; // return exitStatus of the process
   return wait();
 }
 
