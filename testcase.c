@@ -5,18 +5,16 @@
 int main(void)
 {
     int staus;
-    int tt =fork();
-    if(tt==0)
+    int tt = fork();
+    int pid = wait(&staus);
+    if (tt != 0)
     {
-        printf(1," i am child\n");
-        exit(2);
+        printf(1, " status of child : %d , PID: %d\n", staus, pid);
     }
-    wait(&staus);
-    printf(1, "Total Number of Open Files: %d\n", numOpenFiles());
-    int fd;
-    fd = open("backup", O_CREATE | O_RDWR);
-    printf(1, "Total Number of Open Files: %d\n", numOpenFiles());
-    close(fd);
-    printf(1, "Total Number of Open Files: %d\n", numOpenFiles());
-    exit(1);
+    if (tt == 0)
+    {
+
+        exit(69);
+    }
+    exit(99);
 }
