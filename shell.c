@@ -26,7 +26,7 @@ int extractCmd(char *res, int start, int len, char *args[32])
     for (int i = start; i <= len; i++)
     {
 
-        if (res[i] == ' ' || res[i] == '\n' || res[i] == '|')
+        if (res[i] == ' ' || res[i] == '\n' || res[i] == '|' || res[i] == ';')
         {
             arg[i] = '\0';
             args[index] = arg;
@@ -38,7 +38,6 @@ int extractCmd(char *res, int start, int len, char *args[32])
         arg[j] = res[i];
         j += 1;
     }
-    // args[index]=0;
     return 0;
 }
 int checkPipe(char *buf, int len)
@@ -46,6 +45,16 @@ int checkPipe(char *buf, int len)
     while (len - 1 > 0)
     {
         if (buf[len - 1] == '|')
+            return len - 1;
+        len--;
+    }
+    return -1;
+}
+int checkParallel(char *buf,int len)
+{
+    while (len - 1 > 0)
+    {
+        if (buf[len - 1] == ';')
             return len - 1;
         len--;
     }
@@ -63,8 +72,6 @@ int checkForRedirection(char *args[])
             strcpy(fileName, args[i + 1]);
             close(0);
             open(fileName, O_RDONLY);
-            // args[i]=0;
-            // args[i+1]=0;
             readIndex = i;
             break;
         }
@@ -77,10 +84,8 @@ int checkForRedirection(char *args[])
         {
             strcpy(fileName, args[i + 1]);
             close(1);
-            open(fileName, O_CREATE | O_WRONLY);
-            // args[i]=0;
-            // args[i+1]=0;
-            // break;
+            unlink(fileName);
+            open(fileName, O_CREATE | O_RDWR);
             writeIndex = i;
         }
         i++;
@@ -95,19 +100,35 @@ int checkForRedirection(char *args[])
         args[writeIndex] = 0;
         args[writeIndex + 1] = 0;
     }
-    // for (int i = 0; i < 5; i++)
-    //     printf(1, "%s\n", args[i]);
     return 1;
 }
 int runCmd(char *buf, int len, int parent)
 {
 
     int pipeFlag = 0;
-    int p[2];
+    int p[2],parallel=-1;
     pipe(p);
     char *argsLeft[32], *argsRight[32], *legacy[] = {"ls", "cat", "grep", "echo", "wc"}, legacyLen = 5;
     flushArgs(argsLeft);
     flushArgs(argsRight);
+    printf(1,buf);
+    parallel = checkParallel(buf,len); 
+    if(parallel!=-1)
+    {
+        extractCmd(buf, 0, parallel, argsLeft);
+        extractCmd(buf, parallel + 2, 512, argsRight);
+        if(fork()==0)
+        {
+                exec(argsLeft[0],argsLeft);
+        }
+        if (fork()==0)
+        {
+            exec(argsRight[0],argsRight);
+        }
+         wait(0);
+         wait(0);
+        return 1;
+    }
     int pipeIndex = len;
     int tempPipeIndex = checkPipe(buf, len);
     if (tempPipeIndex > 0)
@@ -121,13 +142,9 @@ int runCmd(char *buf, int len, int parent)
     if (tempPipeIndex == -1 && parent)
         return 1;
     extractCmd(buf, 0, pipeIndex, argsLeft);
-    psinfo();
-    if (fork() == 0)
+    if (fork() == 0) 
     {
-        // char fileName[10]="ls";
         int cmdFLag = 0;
-        // close(0);
-        // open(fileName,O_RDONLY);
         checkForRedirection(argsLeft);
         for (int i = 0; i < legacyLen; i++)
         {
@@ -149,15 +166,13 @@ int runCmd(char *buf, int len, int parent)
             close(p[0]);
             close(p[1]);
         }
-        // procinfo(3);
         if (exec(argsLeft[0], argsLeft) < 0)
             printf(1, "error");
-        // psinfo();
-        // procinfo(4);
     }
     if (argsRight[0] && fork() == 0)
     {
         int cmdFLag = 0;
+        checkForRedirection(argsRight);
         for (int i = 0; i < legacyLen; i++)
         {
             if (!strcmp(legacy[i], argsLeft[0]))
