@@ -572,9 +572,12 @@ void procinfo(int pid)
     if (p->pid == pid)
     {
         int count = 0;
-      for (int i = 0; i < 16; i++)
-        if (p->ofile[i] != 0)
+      for (int i = 0; i < 10; i++)
+        if (p->ofile[i] != 0 || 1)
+        {
+          cprintf("%x\n",p->ofile[i]);
           count++;
+        }
       struct rtcdate createdDT = p->creationDT;
       struct rtcdate lastContextInDT = p->lastContextInDT;
       struct rtcdate lastContextOutDT = p->lastContextOutDT;

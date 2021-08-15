@@ -7,6 +7,7 @@
         "stat.h": "c",
         "types.h": "c",
         "fcntl.h": "c",
-        "cstdio": "c"
+        "cstdio": "c",
+        "elf.h": "c"
     }
 }

@@ -1,9 +1,11 @@
 #include "types.h"
 #include "stat.h"
 #include "user.h"
+#include "fcntl.h"
+
 int getcmd(char *buf, int nbuf)
 {
-    printf(2, "myshell>");
+    printf(1, "myshell>");
     memset(buf, 0, nbuf);
     gets(buf, nbuf);
 
@@ -49,8 +51,57 @@ int checkPipe(char *buf, int len)
     }
     return -1;
 }
+int checkForRedirection(char *args[])
+{
+    char fileName[100];
+    int i = 0;
+    int readIndex = -1, writeIndex = -1;
+    while (args[i] && args[i + 1])
+    {
+        if (!strcmp("<", args[i]))
+        {
+            strcpy(fileName, args[i + 1]);
+            close(0);
+            open(fileName, O_RDONLY);
+            // args[i]=0;
+            // args[i+1]=0;
+            readIndex = i;
+            break;
+        }
+        i++;
+    }
+    i=0;
+    while (args[i] && args[i + 1])
+    {
+        if (!strcmp(">", args[i]))
+        {
+            strcpy(fileName, args[i + 1]);
+            close(1);
+            open(fileName, O_CREATE | O_WRONLY);
+            // args[i]=0;
+            // args[i+1]=0;
+            // break;
+            writeIndex = i;
+        }
+        i++;
+    }
+    if (readIndex != -1)
+    {
+        args[readIndex] = 0;
+        args[readIndex + 1] = 0;
+    }
+    if (writeIndex != -1)
+    {
+        args[writeIndex] = 0;
+        args[writeIndex + 1] = 0;
+    }
+    // for (int i = 0; i < 5; i++)
+    //     printf(1, "%s\n", args[i]);
+    return 1;
+}
 int runCmd(char *buf, int len, int parent)
 {
+
     int pipeFlag = 0;
     int p[2];
     pipe(p);
@@ -70,9 +121,14 @@ int runCmd(char *buf, int len, int parent)
     if (tempPipeIndex == -1 && parent)
         return 1;
     extractCmd(buf, 0, pipeIndex, argsLeft);
+    psinfo();
     if (fork() == 0)
     {
+        // char fileName[10]="ls";
         int cmdFLag = 0;
+        // close(0);
+        // open(fileName,O_RDONLY);
+        checkForRedirection(argsLeft);
         for (int i = 0; i < legacyLen; i++)
         {
             if (!strcmp(legacy[i], argsLeft[0]))
@@ -93,9 +149,11 @@ int runCmd(char *buf, int len, int parent)
             close(p[0]);
             close(p[1]);
         }
-
+        // procinfo(3);
         if (exec(argsLeft[0], argsLeft) < 0)
             printf(1, "error");
+        // psinfo();
+        // procinfo(4);
     }
     if (argsRight[0] && fork() == 0)
     {
@@ -132,10 +190,12 @@ int runCmd(char *buf, int len, int parent)
 }
 int main(void)
 {
-    char buf[512];
+    char buf[512], en[] = "exit\n";
     while (1)
     {
         getcmd(buf, sizeof(buf));
+        if (!strcmp(en, buf))
+            break;
         runCmd(buf, strlen(buf), 0);
     }
     exit(1);
