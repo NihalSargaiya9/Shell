@@ -572,8 +572,8 @@ void procinfo(int pid)
     if (p->pid == pid)
     {
         int count = 0;
-      for (int i = 0; i < 10; i++)
-        if (p->ofile[i] != 0 || 1)
+      for (int i = 0; i < 16; i++)
+        if (p->ofile[i] != 0)
         {
           cprintf("%x\n",p->ofile[i]);
           count++;

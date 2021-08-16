@@ -62,6 +62,18 @@ int checkParallel(char *buf,int len)
     }
     return -1;
 }
+int checkLogical(char *buf,int len)
+{
+    while (len - 1 > 0)
+    {
+        if (buf[len - 1] == '&' && buf[len - 2] == '&')
+            return len - 2;
+        if (buf[len - 1] == '|' && buf[len - 2] == '|')
+            return len - 2 ;
+        len--;
+    }
+    return -1;
+}
 int checkForRedirection(char *args[])
 {
     char fileName[100];
@@ -106,8 +118,10 @@ int checkForRedirection(char *args[])
 }
 int runCmd(char *buf, int len, int parent)
 {
+    // psinfo();
+    // procinfo(3);
     int pipeFlag = 0;
-    int p[2],parallel=-1;
+    int p[2],parallel=-1,logical=0;
     pipe(p);
     char *argsLeft[32], *argsRight[32], *legacy[] = {"ls", "cat", "grep", "echo", "wc"}, legacyLen = 5;
     flushArgs(argsLeft);
@@ -127,6 +141,50 @@ int runCmd(char *buf, int len, int parent)
         }
          wait(0);
          wait(0);
+        for(int i=3;i<16;i++)
+            close(i);
+        return 1;
+    }
+    logical = checkLogical(buf,len);
+    if(logical!=-1)
+    {  
+        extractCmd(buf, 0, logical-1, argsLeft);
+        extractCmd(buf, logical + 3, 512, argsRight);
+        if(buf[logical]=='&')
+        {
+            int p1es;
+            if(fork()==0)
+            {
+                    exec(argsLeft[0],argsLeft);
+            }
+            else
+                wait(&p1es);
+            if(p1es==0)
+            {
+                if(fork()==0)
+                    exec(argsRight[0],argsRight);
+                else                    
+                    wait(0);
+            }
+        }
+        if(buf[logical]=='|')
+        {
+            int p1es;
+            if(fork()==0)
+            {
+                    exec(argsLeft[0],argsLeft);
+            }
+            wait(&p1es);
+            if(p1es!=0)
+            {
+                if(fork()==0)
+                    exec(argsRight[0],argsRight);
+                wait(0);
+            }
+            
+        }
+        for(int i=3;i<16;i++)
+            close(i);
         return 1;
     }
     int pipeIndex = len;
@@ -201,7 +259,8 @@ int runCmd(char *buf, int len, int parent)
         wait(0);
     }
     wait(0);
-
+    for(int i=3;i<16;i++)
+        close(i);
     return 1;
 }
 int main(void)
@@ -240,6 +299,8 @@ int main(void)
                     }
                 }
             }
+            for(int i=3;i<16;i++)
+               close(i);
             continue;
         }
         runCmd(buf, strlen(buf), 0);
