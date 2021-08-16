@@ -26,6 +26,7 @@ int extractCmd(char *res, int start, int len, char *args[32])
     for (int i = start; i <= len; i++)
     {
 
+
         if (res[i] == ' ' || res[i] == '\n' || res[i] == '|' || res[i] == ';')
         {
             arg[i] = '\0';
@@ -38,6 +39,7 @@ int extractCmd(char *res, int start, int len, char *args[32])
         arg[j] = res[i];
         j += 1;
     }
+
     return 0;
 }
 int checkPipe(char *buf, int len)
@@ -104,14 +106,12 @@ int checkForRedirection(char *args[])
 }
 int runCmd(char *buf, int len, int parent)
 {
-
     int pipeFlag = 0;
     int p[2],parallel=-1;
     pipe(p);
     char *argsLeft[32], *argsRight[32], *legacy[] = {"ls", "cat", "grep", "echo", "wc"}, legacyLen = 5;
     flushArgs(argsLeft);
     flushArgs(argsRight);
-    printf(1,buf);
     parallel = checkParallel(buf,len); 
     if(parallel!=-1)
     {
@@ -144,6 +144,7 @@ int runCmd(char *buf, int len, int parent)
     extractCmd(buf, 0, pipeIndex, argsLeft);
     if (fork() == 0) 
     {
+
         int cmdFLag = 0;
         checkForRedirection(argsLeft);
         for (int i = 0; i < legacyLen; i++)
@@ -205,12 +206,42 @@ int runCmd(char *buf, int len, int parent)
 }
 int main(void)
 {
-    char buf[512], en[] = "exit\n";
+    char buf[512], en[] = "exit\n",*tempArgs[32];
+    int tempFile = open("sample",O_CREATE  |O_WRONLY);
+    char data[]="echo Nihal\nls > temp\necho done\ncat temp";
+    write(tempFile,data,strlen(data));
     while (1)
     {
         getcmd(buf, sizeof(buf));
         if (!strcmp(en, buf))
+        {
+            wait(0);
             break;
+        }
+        extractCmd(buf,0,strlen(buf),tempArgs);
+        if(!strcmp(tempArgs[0],"executeCommands"))
+        {  
+            int n,index=0;
+            char newbuf[512];
+            int fd = open(tempArgs[1],O_RDONLY);
+            while((n = read(fd, newbuf, sizeof(newbuf))) > 0) {
+                char cmd[512];
+                for(int i=0;i<strlen(newbuf);i++)
+                {
+                    cmd[index]=newbuf[i];
+                    index++;
+                    if( i == strlen(newbuf)-1  || newbuf[i]=='\n')
+                    {
+                        if(i == strlen(newbuf)-1)
+                            cmd[index]='\n';
+                        runCmd(cmd,strlen(cmd),0);
+                        memset(cmd, 0, sizeof(cmd)); 
+                        index=0;
+                    }
+                }
+            }
+            continue;
+        }
         runCmd(buf, strlen(buf), 0);
     }
     exit(1);
