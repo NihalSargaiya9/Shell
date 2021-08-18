@@ -575,7 +575,6 @@ void procinfo(int pid)
       for (int i = 0; i < 16; i++)
         if (p->ofile[i] != 0)
         {
-          cprintf("%x\n",p->ofile[i]);
           count++;
         }
       struct rtcdate createdDT = p->creationDT;

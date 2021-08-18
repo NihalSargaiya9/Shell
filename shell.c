@@ -9,8 +9,9 @@ int getcmd(char *buf, int nbuf)
     memset(buf, 0, nbuf);
     gets(buf, nbuf);
 
-    if (buf[0] == 0)
-        return -1;
+
+        if (buf[0] == 0)
+            return -1;
     return 0;
 }
 void flushArgs(char *args[32])
@@ -23,6 +24,8 @@ int extractCmd(char *res, int start, int len, char *args[32])
     int index = 0, j = 0;
     char *arg;
     arg = (char *)malloc(sizeof(char) * 512);
+
+    // arg = (char *)malloc(sizeof(char) * 512);
     for (int i = start; i <= len; i++)
     {
 
@@ -119,11 +122,9 @@ int checkForRedirection(char *args[])
 int runCmd(char *buf, int len, int parent)
 {
     // psinfo();
-    // procinfo(3);
     int pipeFlag = 0;
     int p[2],parallel=-1,logical=0;
-    pipe(p);
-    char *argsLeft[32], *argsRight[32], *legacy[] = {"ls", "cat", "grep", "echo", "wc"}, legacyLen = 5;
+    char *argsLeft[32], *argsRight[32], *legacy[] = {"ls", "cat", "grep", "echo", "wc","ps", "procinfo"}, legacyLen = 7;
     flushArgs(argsLeft);
     flushArgs(argsRight);
     parallel = checkParallel(buf,len); 
@@ -141,6 +142,7 @@ int runCmd(char *buf, int len, int parent)
         }
          wait(0);
          wait(0);
+
         for(int i=3;i<16;i++)
             close(i);
         return 1;
@@ -190,7 +192,11 @@ int runCmd(char *buf, int len, int parent)
     int pipeIndex = len;
     int tempPipeIndex = checkPipe(buf, len);
     if (tempPipeIndex > 0)
+    {
+        pipe(p);
         pipeIndex = tempPipeIndex;
+
+    }
     if (tempPipeIndex > 0)
     {
         extractCmd(buf, pipeIndex + 2, 512, argsRight);
@@ -259,6 +265,7 @@ int runCmd(char *buf, int len, int parent)
         wait(0);
     }
     wait(0);
+  
     for(int i=3;i<16;i++)
         close(i);
     return 1;
@@ -266,9 +273,6 @@ int runCmd(char *buf, int len, int parent)
 int main(void)
 {
     char buf[512], en[] = "exit\n",*tempArgs[32];
-    int tempFile = open("sample",O_CREATE  |O_WRONLY);
-    char data[]="echo Nihal\nls > temp\necho done\ncat temp";
-    write(tempFile,data,strlen(data));
     while (1)
     {
         getcmd(buf, sizeof(buf));
@@ -303,7 +307,13 @@ int main(void)
                close(i);
             continue;
         }
+
         runCmd(buf, strlen(buf), 0);
+
+        for(int i=3;i<16;i++)
+        {
+            close(i);
+        }
     }
     exit(1);
 }
